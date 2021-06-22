@@ -428,7 +428,7 @@ def get_minima(data):
     print(center)
     min_right = data[center]
     min_left = data[center]
-    for i in range(center, data.shape[0]):
+    for i in range(center, data.shape[0]-1):
         if data[i+1] <= min_right:
             min_right = data[i+1]
         else:
@@ -439,7 +439,7 @@ def get_minima(data):
         else:
             break
     return min_left, min_right
-def getRatio_flicker_MA(epoch,fmin=35.0,fmax=45.0,picks=['O1', 'OZ', 'O2']):
+def getRatio_flicker_MA(epoch,fmin=38.0,fmax=42.0,picks=['O1', 'OZ', 'O2']):
     psds, freqs = psd_multitaper(epoch,fmin=fmin, fmax=fmax, n_jobs=8,picks=picks) 
     # MA: 做滑动平均
     psds = doMA3D(psds)
@@ -458,20 +458,12 @@ def getRatio_flicker_MA(epoch,fmin=35.0,fmax=45.0,picks=['O1', 'OZ', 'O2']):
     psds = np.mean(psds, axis=1)
     # extract power in selected frequency bands
     downstream_mean_power, target_mean_power, upstream_mean_power = [],[],[]
-    for i in range(0, num_of_epoch):
-        a,b,c = [],[],[]
-        for j in range(0, len(freqs)):
-            freq = freqs[j]
-            power = psds[i][j]
-            if freq < f_low and freq > f_down:
-                a.append(power)
-            if freq < f_high and freq > f_low:
-                b.append(power)
-            if freq < f_upstream and freq > f_high:
-                c.append(power)
-        downstream_mean_power.append(np.min(a))
-        target_mean_power.append(np.max(b))
-        upstream_mean_power.append(np.min(c))
+    for i in range(0, num_of_epoch): 
+        a,c = get_minima(psds[i])
+        b = np.max(psds[i])
+        downstream_mean_power.append(a)
+        target_mean_power.append(b)
+        upstream_mean_power.append(c)
     print(r'The downstream min power is:')
     print(downstream_mean_power)
     print(r'The taget band max power is:')
@@ -501,7 +493,7 @@ def getRatio_flicker_MA(epoch,fmin=35.0,fmax=45.0,picks=['O1', 'OZ', 'O2']):
     print(r'The downstream/upstream is:')
     print(ratio_DU)
     return downstream_mean_power,target_mean_power,upstream_mean_power
-def getRatio_rest_MA(epoch,fmin=35.0,fmax=45.0,picks=['O1', 'OZ', 'O2']):
+def getRatio_rest_MA(epoch,fmin=38.0,fmax=42.0,picks=['O1', 'OZ', 'O2']):
     psds, freqs = psd_multitaper(epoch,fmin=fmin, fmax=fmax, n_jobs=8,picks=picks) 
     # MA: 做滑动平均
     psds = doMA3D(psds)
@@ -520,20 +512,12 @@ def getRatio_rest_MA(epoch,fmin=35.0,fmax=45.0,picks=['O1', 'OZ', 'O2']):
     psds = np.mean(psds, axis=1)
     # extract power in selected frequency bands
     downstream_mean_power, target_mean_power, upstream_mean_power = [],[],[]
-    for i in range(0, num_of_epoch):
-        a,b,c = [],[],[]
-        for j in range(0, len(freqs)):
-            freq = freqs[j]
-            power = psds[i][j]
-            if freq < f_low and freq > f_down:
-                a.append(power)
-            if freq < f_high and freq > f_low:
-                b.append(power)
-            if freq < f_upstream and freq > f_high:
-                c.append(power)
-        downstream_mean_power.append(np.min(a))
-        target_mean_power.append(np.max(b))
-        upstream_mean_power.append(np.min(c))
+    for i in range(0, num_of_epoch): 
+        a,c = get_minima(psds[i])
+        b = np.max(psds[i])
+        downstream_mean_power.append(a)
+        target_mean_power.append(b)
+        upstream_mean_power.append(c)
     print(r'The downstream min power is:')
     print(downstream_mean_power)
     print(r'The taget band max power is:')
