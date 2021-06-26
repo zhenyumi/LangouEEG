@@ -8,10 +8,12 @@ from mne.time_frequency import tfr_morlet, psd_multitaper, psd_welch
 from copy import deepcopy
 from mne.preprocessing import create_ecg_epochs, create_eog_epochs, read_ica
 import sys
+from tensorpac import Pac, EventRelatedPac, PreferredPhase
+from tensorpac.utils import PeakLockedTF, PSD, ITC, BinAmplitude
 #mne.utils.set_config('MNE_USE_CUDA', 'true')  
-def init_prog(MA_n=20.0):
-    global n_of_MA
-    n_of_MA = MA_n
+dataRoot = "/data/home/viscent/Light"
+
+def init_prog():
     global ratio_TD_all_r, ratio_TU_all_r, ratio_DU_all_r
     ratio_TD_all_r, ratio_TU_all_r, ratio_DU_all_r = [],[],[]
 
@@ -25,7 +27,7 @@ def init_prog(MA_n=20.0):
     ratioMA_TD_all_f, ratioMA_TU_all_f, ratioMA_DU_all_f = [],[],[]
     
     return
-def save_ratios(filefolder = sys.path[0] + '\\Light'):
+def save_ratios(filefolder = dataRoot + '/Light'):
     global ratio_TD_all_r, ratio_TU_all_r, ratio_DU_all_r
     global ratio_TD_all_f, ratio_TU_all_f, ratio_DU_all_f
     global ratioMA_TD_all_r, ratioMA_TU_all_r, ratioMA_DU_all_r
@@ -35,26 +37,26 @@ def save_ratios(filefolder = sys.path[0] + '\\Light'):
     df_r['ratio_TD'] = ratio_TD_all_r
     df_r['ratio_TU'] = ratio_TU_all_r
     df_r['ratio_DU'] = ratio_DU_all_r
-    df_r.to_csv(filefolder + '\\ratios_rest.csv')
+    df_r.to_csv(filefolder + '/ratios_rest.csv')
     df_f = pd.DataFrame()
     df_f['ratio_TD'] = ratio_TD_all_f
     df_f['ratio_TU'] = ratio_TU_all_f
     df_f['ratio_DU'] = ratio_DU_all_f
-    df_f.to_csv(filefolder + '\\ratios_flicker.csv')
+    df_f.to_csv(filefolder + '/ratios_flicker.csv')
     dfMA_r = pd.DataFrame()
     dfMA_r['ratio_TD'] = ratioMA_TD_all_r
     dfMA_r['ratio_TU'] = ratioMA_TU_all_r
     dfMA_r['ratio_DU'] = ratioMA_DU_all_r
-    dfMA_r.to_csv(filefolder + '\\ratiosMA_rest.csv')
+    dfMA_r.to_csv(filefolder + '/ratiosMA_rest.csv')
     dfMA_f = pd.DataFrame()
     dfMA_f['ratio_TD'] = ratioMA_TD_all_f
     dfMA_f['ratio_TU'] = ratioMA_TU_all_f
     dfMA_f['ratio_DU'] = ratioMA_DU_all_f
-    dfMA_f.to_csv(filefolder + '\\ratiosMA_flicker.csv')
+    dfMA_f.to_csv(filefolder + '/ratiosMA_flicker.csv')
     return
-def csv_transformat(filefolder = sys.path[0] + '\\Light', type='flicker'):
-    filefolder = sys.path[0] + '\\Light'
-    df=pd.read_csv(filefolder + '\\ratios_{0}.csv'.format(type))
+def csv_transformat(filefolder = dataRoot + '/Light', type='flicker'):
+    filefolder = dataRoot + '/Light'
+    df=pd.read_csv(filefolder + '/ratios_{0}.csv'.format(type))
     shape = df.shape
     print(shape)
     rows = shape[0]
@@ -71,12 +73,12 @@ def csv_transformat(filefolder = sys.path[0] + '\\Light', type='flicker'):
     save = pd.DataFrame()
     save['ratios'] = ratios
     save['labels'] = labels
-    save.to_csv(filefolder + '\\ratios_{0}_all.csv'.format(type))
+    save.to_csv(filefolder + '/ratios_{0}_all.csv'.format(type))
     print('{0} CSV transformation complete'.format(type))
     return
-def csv_transformat_MA(filefolder = sys.path[0] + '\\Light', type='flicker'):
-    filefolder = sys.path[0] + '\\Light'
-    df=pd.read_csv(filefolder + '\\ratiosMA_{0}.csv'.format(type))
+def csv_transformat_MA(filefolder = dataRoot + '/Light', type='flicker'):
+    filefolder = dataRoot + '/Light'
+    df=pd.read_csv(filefolder + '/ratiosMA_{0}.csv'.format(type))
     shape = df.shape
     print(shape)
     rows = shape[0]
@@ -93,20 +95,21 @@ def csv_transformat_MA(filefolder = sys.path[0] + '\\Light', type='flicker'):
     save = pd.DataFrame()
     save['ratios'] = ratios
     save['labels'] = labels
-    save.to_csv(filefolder + '\\ratiosMA_{0}_all.csv'.format(type))
+    save.to_csv(filefolder + '/ratiosMA_{0}_all.csv'.format(type))
     print('{0} CSV transformation complete'.format(type))
     return
 def initData(subject_name,picks_str=['O1','O2','OZ']):
-    dataDir = "./Light"
-    file_path = os.path.join(dataDir,subject_name + " Data.cnt")
+    file_path = dataRoot+'/Light/'+subject_name + " Data.cnt"
+    print(dataRoot)
+    print(file_path)
     raw = mne.io.read_raw_cnt(file_path, preload=True)
     # picks = mne.pick_types(raw.info, meg=False, eeg=True, stim=False, eog=True, exclude='bads')
     picks = mne.pick_channels(raw.info["ch_names"], picks_str)     
-    if not os.path.exists(sys.path[0]+('\\Light')):
+    if not os.path.exists(dataRoot+('/Light')):
         os.mkdir('Light')
     return raw,picks,picks_str
 def initLayout(raw):
-    layout = pd.read_csv(sys.path[0] + '\\channel_dict.txt', sep = '\t')
+    layout = pd.read_csv(dataRoot + '/channel_dict.txt', sep = '\t')
     layout.columns = layout.columns.str.strip()
     layout["labels"] = layout["labels"].str.strip()
     layout = layout.set_index('labels')
@@ -152,7 +155,7 @@ def dbgPlot(raw):
     # Set fig size
     img_raw_plot = raw.plot(duration = 40, n_channels=65, scalings=scale,start=288)
     img_raw_plot.set_size_inches([20,20])
-    # img_raw_plot.savefig(sys.path[0] + '\\img_raw_plot3.png', dpi=300)
+    # img_raw_plot.savefig(dataRoot + '/img_raw_plot3.png', dpi=300)
 def runICA(raw):
 # set up and fit the ICA
     ica = mne.preprocessing.ICA(n_components=20, random_state=0)
@@ -209,9 +212,7 @@ def extractEpochs(raw,events,picks,tmin_rest = 60,tmax_rest = 120,tmin_flick = 3
     evoked_4F = epoch_4F.average()
     #evoked_4F.plot(time_unit='s')
     return epoch_RR,epoch_RF,epoch_4R,epoch_4F
-def doMA(psds):
-    global n_of_MA
-    n = n_of_MA
+def doMA(psds,n=20):
     for i in range(psds.shape[0]):
         tempSum=0
         for j in range(int(n)):
@@ -269,7 +270,7 @@ def superposGamma(epoch_4R,epoch_4F,epoch_RF,subject_name,MA=False):
         plot_psd_sub(ax=ax,epoch = epoch_RF, color='r', fmin=fmin, fmax=fmax, alpha=alpha, label='Random Hz Light Stimulation')
     plt.xlabel("Frequency")
     plt.ylabel("Power spectral density (PSD) in log")
-    plt.savefig(sys.path[0] + '\\Light\\Light_figures_non\\' + subject_name + '_35_45.png')
+    plt.savefig(dataRoot + '/Light/Light_figures_non/' + subject_name + '_35_45.png')
 def superposFull(epoch_4R,epoch_4F,epoch_RF,subject_name,MA=False):
     fmin = 0
     fmax = 120
@@ -285,7 +286,7 @@ def superposFull(epoch_4R,epoch_4F,epoch_RF,subject_name,MA=False):
         plot_psd_sub(ax=ax,epoch = epoch_RF, color='r', fmin=fmin, fmax=fmax, alpha=alpha, label='Random Hz Light Stimulation')
     plt.xlabel("Frequency")
     plt.ylabel("Power spectral density (PSD) in log")
-    plt.savefig(sys.path[0] + '\\Light\\Light_figures_non\\' + subject_name + '_0_120.png')
+    plt.savefig(dataRoot + '/Light/Light_figures_non/' + subject_name + '_0_120.png')
 def superpos85(epoch_4R,epoch_4F,epoch_RF,subject_name,MA=False):
     fmin = 40
     fmax = 85
@@ -301,7 +302,7 @@ def superpos85(epoch_4R,epoch_4F,epoch_RF,subject_name,MA=False):
         plot_psd_sub(ax=ax,epoch = epoch_RF, color='r', fmin=fmin, fmax=fmax, alpha=alpha, label='Random Hz Light Stimulation')
     plt.xlabel("Frequency")
     plt.ylabel("Power spectral density (PSD) in log")
-    plt.savefig(sys.path[0] + '\\Light\\Light_figures_non\\' + subject_name + '_40_85.png')
+    plt.savefig(dataRoot + '/Light/Light_figures_non/' + subject_name + '_40_85.png')
 def getRatio_rest(epoch,fmin=35.0,fmax=45.0,picks=['O1', 'OZ', 'O2']):
     psds, freqs = psd_multitaper(epoch,fmin=fmin, fmax=fmax, n_jobs=8,picks=picks) 
     # psd.shape: (number of epoch, number of channel, frequency)
