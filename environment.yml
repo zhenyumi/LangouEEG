@@ -39,3 +39,6 @@ dependencies:
 - ipywidgets
 - pip:
   - ipyvtklink
+  - ipykernel
+  - tensorpac
+  - mpi4py
