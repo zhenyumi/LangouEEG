@@ -11,15 +11,12 @@ import sys
 from langouEEG import *
 from tensorpac import Pac, EventRelatedPac, PreferredPhase
 from tensorpac.utils import PeakLockedTF, PSD, ITC, BinAmplitude
-from mpi4py import MPI
 import pickle
 from tqdm import trange
 dataRoot = "/data/home/viscent/Light"
 
-comm = MPI.COMM_WORLD
-size = comm.Get_size()
-rank = comm.Get_rank()
-subject_name=int(rank)+1
+
+subject_name=4
 if subject_name<10:
     subject_name='S0'+str(subject_name)
 else:
@@ -48,7 +45,7 @@ for i in trange(64):
         amp_p = p_obj.filter(sf, amp, ftype='amplitude')
         time_exec = slice(5000, 6000)
         pha_exec, amp_exec = pha_p[..., time_exec], amp_p[..., time_exec]
-        pac_exec = p_obj.fit(pha_exec, amp_exec).mean(-1)
+        pac_exec = p_obj.gpufit(pha_exec, amp_exec).mean(-1)
         p_objs.append(p_obj)
 with open(dataRoot+'/'+subject_name+'_pac.lgeeg','wb') as f:
     pickle.dump(p_objs,f)
