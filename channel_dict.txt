@@ -66,3 +66,4 @@ Number	labels	type	theta	radius	X	Y	Z	sph_theta	sph_phi	sph_radius
 65	VEO		27	0.694	62	-31.6	-48.8	-27	-35	85
 66	M1		0	0	0	0	0	0	0	0
 67	Trigger		0	0	0	0	0	0	0	0
+46	M2		100	0.747	-11	-59.6	-59.6	-100	-44.5	85
