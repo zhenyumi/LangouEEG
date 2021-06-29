@@ -30,5 +30,5 @@ initLayout(raw)
 events, event_dict=extractEvents(raw)
 filterRaw(raw, picks, ref_set_average=False, ref_channels=['M1', 'M2'])
 runICA(raw)
-with open(dataRoot+'/'+subject_name+'_clean.lgeeg','wb') as f:
+with open(dataRoot+'/clean_data/'+subject_name+'_clean.lgeeg','wb') as f:
     pickle.dump(raw,f)
