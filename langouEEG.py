@@ -10,8 +10,10 @@ from mne.preprocessing import create_ecg_epochs, create_eog_epochs, read_ica
 import sys
 from tensorpac import Pac, EventRelatedPac, PreferredPhase
 from tensorpac.utils import PeakLockedTF, PSD, ITC, BinAmplitude
+from scipy.integrate import simps
 #mne.utils.set_config('MNE_USE_CUDA', 'true')  
-dataRoot = "/data/home/viscent/Light"
+#dataRoot = "/data/home/viscent/Light"
+dataRoot = sys.path[0]
 
 def init_prog():
     global ratio_TD_all_r, ratio_TU_all_r, ratio_DU_all_r
@@ -25,6 +27,9 @@ def init_prog():
     
     global ratioMA_TD_all_f, ratioMA_TU_all_f, ratioMA_DU_all_f
     ratioMA_TD_all_f, ratioMA_TU_all_f, ratioMA_DU_all_f = [],[],[]
+    
+    global rel_power_R, rel_power_F, subj_number_R, subj_number_F
+    rel_power_R, rel_power_F, subj_number_R, subj_number_F = [],[],[],[]
     
     return
 def save_ratios(filefolder = dataRoot + '/Light'):
@@ -548,3 +553,69 @@ def getRatio_rest_MA(epoch,fmin=38.0,fmax=42.0,picks=['O1', 'OZ', 'O2']):
     print(r'The downstream/upstream is:')
     print(ratio_DU)
     return downstream_mean_power,target_mean_power,upstream_mean_power
+
+def calc_abs_power_simp(epoch, fmin, fmax, fbottom, ftop, sfreq):
+    epoch = np.asarray(epoch)
+    band_power_all = []
+    # psds, freqs = mne.time_frequency.psd_array_multitaper(epoch, n_jobs=8, sfreq=500.0) 
+    psds, freqs = mne.time_frequency.psd_array_multitaper(epoch, fmin=fbottom, fmax=ftop, n_jobs=8, sfreq=500.0)
+    # Average all channels
+    psds = np.mean(psds, axis=1)
+    # Resolution of calculation
+    freq_res = freqs[1] - freqs[0]
+    # Select frequency band
+    band = [fmin, fmax]
+    idx_band = ((freqs >= band[0]) & (freqs <= band[1]))
+    print(freqs.shape)
+    print(psds.shape)
+    # integrate the PSD
+    num = (fmax-fmin)/freq_res
+    for i in range(psds.shape[0]):
+        band_power = simps(psds[i][idx_band], dx=freq_res)
+        band_power_all.append(band_power)
+        # band_power_all.append(band_power/(num))
+    print(band)
+    print(band_power_all)
+    return band_power_all
+
+def get_all_abs_power(epoch_R, epoch_F, f_bottom = 35.0, f_low = 39.0, f_high = 41.0, f_top = 50.0, sfreq=500.0):
+    power_all_R = calc_abs_power_simp(epoch=epoch_R, fmin=f_bottom, fmax=f_top, fbottom=f_bottom, ftop=f_top, sfreq=500.0)
+    power_R = calc_abs_power_simp(epoch=epoch_R, fmin=f_low, fmax=f_high, fbottom=f_bottom, ftop=f_top, sfreq=500.0)
+    power_all_F = calc_abs_power_simp(epoch=epoch_F, fmin=f_bottom, fmax=f_top, fbottom=f_bottom, ftop=f_top, sfreq=500.0)
+    power_F = calc_abs_power_simp(epoch=epoch_F, fmin=f_low, fmax=f_high, fbottom=f_bottom, ftop=f_top, sfreq=500.0)
+    return power_all_R, power_R, power_all_F, power_F
+
+def cal_rel_power_R(power_target, power_all):
+    global rel_power_R
+    for i in range(min(len(power_target), len(power_all))):
+        rel_power_R.append(power_target[i]/power_all[i])
+    print(rel_power_R)
+    return rel_power_R, min(len(power_target), len(power_all))
+
+def cal_rel_power_F(power_target, power_all):
+    global rel_power_F
+    for i in range(min(len(power_target), len(power_all))):
+        rel_power_F.append(power_target[i]/power_all[i])
+    print(rel_power_F)
+    return rel_power_F, min(len(power_target), len(power_all))
+
+def save_rel_powers_subj(length_R, length_F, filefolder = dataRoot + '/Light/csvs', subject_name="Undefined"):
+    # 添加样本序号索引
+    global rel_power_R, rel_power_F, subj_number_R, subj_number_F
+    subj_number_R = subj_number_R + list([subject_name])*length_R
+    subj_number_F = subj_number_F + list([subject_name])*length_F
+    df_R, df_F,df_subj_R, df_subj_F = pd.DataFrame(), pd.DataFrame(), pd.DataFrame(), pd.DataFrame()
+    df_R['rel_power_rest'] = rel_power_R
+    df_F['rel_power_flicker'] = rel_power_F
+    df_subj_R["Subject Number Rest"] = subj_number_R
+    df_subj_F["Subject Number Flicker"] = subj_number_F
+    df_csv = pd.concat([df_R, df_subj_R, df_F, df_subj_F], axis=1)
+    df_csv.to_csv(filefolder + '/rel_powers.csv')
+
+def save_rel_powers(filefolder = dataRoot + '/Light/csvs'):
+    df_R, df_F= pd.DataFrame(), pd.DataFrame()
+    df_R['rel_power_rest'] = rel_power_R
+    df_F['rel_power_flicker'] = rel_power_F
+    df_csv = pd.concat([df_R, df_F], axis=1)
+    df_csv.to_csv(filefolder + '/rel_powers.csv')
+    
