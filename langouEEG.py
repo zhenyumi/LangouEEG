@@ -109,7 +109,8 @@ def initData(subject_name,picks_str=['O1','O2','OZ']):
     print(file_path)
     raw = mne.io.read_raw_cnt(file_path, preload=True)
     # picks = mne.pick_types(raw.info, meg=False, eeg=True, stim=False, eog=True, exclude='bads')
-    picks = mne.pick_channels(raw.info["ch_names"], picks_str)     
+    picks = mne.pick_channels(raw.info["ch_names"], picks_str)  
+    raw.set_channel_types({'Trigger':'stim','VEO':'eog'})
     if not os.path.exists(dataRoot+('/Light')):
         os.mkdir('Light')
     return raw,picks,picks_str
@@ -174,13 +175,13 @@ def extractEpochs(raw,events,picks,tmin_rest = 60,tmax_rest = 120,tmin_flick = 3
     tmax_rest = tmax_rest
     tmin_flick = tmin_flick
     tmax_flick = tmax_flick
+    reject=dict()
     ## Epoch: Random flicker
     event_id = 1
     tmin = tmin_flick
     tmax = tmax_flick
     epoch_RF = mne.Epochs(raw, events, event_id, tmin, tmax, proj=True,
-                        picks=picks, baseline=(tmin_flick, tmin_flick), preload=True,
-                        reject=dict())
+                        picks=picks,reject=reject, baseline=(tmin_flick, tmin_flick), preload=True)
     evoked_RF = epoch_RF.average()
     #evoked_RF.plot(time_unit='s')
     ## Epoch: Random rest
@@ -188,8 +189,7 @@ def extractEpochs(raw,events,picks,tmin_rest = 60,tmax_rest = 120,tmin_flick = 3
     tmin = tmin_rest
     tmax = tmax_rest
     epoch_RR = mne.Epochs(raw, events, event_id, tmin, tmax, proj=True,
-                        picks=picks, baseline=(tmin_rest, tmin_rest), preload=True,
-                        reject=dict())
+                        picks=picks,reject=reject, baseline=(tmin_rest, tmin_rest), preload=True)
     evoked_RR = epoch_RR.average()
     #evoked_RR.plot(time_unit='s')
     ## Epoch: 40 Hz rest
@@ -197,8 +197,7 @@ def extractEpochs(raw,events,picks,tmin_rest = 60,tmax_rest = 120,tmin_flick = 3
     tmin = tmin_rest
     tmax = tmax_rest
     epoch_4R = mne.Epochs(raw, events, event_id, tmin, tmax, proj=True,
-                        picks=picks, baseline=(tmin_rest, tmin_rest), preload=True,
-                        reject=dict())
+                        picks=picks,reject=reject, baseline=(tmin_rest, tmin_rest), preload=True)
     #epoch_4R.drop([0,1])
     evoked_4R = epoch_4R.average()
     #evoked_4R.plot(time_unit='s')
@@ -207,8 +206,7 @@ def extractEpochs(raw,events,picks,tmin_rest = 60,tmax_rest = 120,tmin_flick = 3
     tmin = tmin_flick
     tmax = tmax_flick
     epoch_4F = mne.Epochs(raw, events, event_id, tmin, tmax, proj=True,
-                        picks=picks,baseline=(tmin_flick, tmin_flick), preload=True, 
-                        reject=dict())
+                        picks=picks,reject=reject,baseline=(tmin_flick, tmin_flick), preload=True)
     epoch_4F_all = mne.Epochs(raw, events, event_id, tmin, tmax, proj=True,
                         baseline=(tmin_flick, tmin_flick), preload=True, 
                         reject=dict())
