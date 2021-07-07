@@ -126,6 +126,7 @@ def initLayout(raw):
     layout = mne.channels.make_dig_montage(layout, coord_frame='head')
     mne.viz.plot_montage(layout)
     raw.set_montage(layout)
+    return raw
 def extractEvents(raw):
 # cnt file describe
     print("file info:")
