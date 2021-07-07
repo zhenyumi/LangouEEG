@@ -12,8 +12,8 @@ from tensorpac import Pac, EventRelatedPac, PreferredPhase
 from tensorpac.utils import PeakLockedTF, PSD, ITC, BinAmplitude
 from scipy.integrate import simps
 #mne.utils.set_config('MNE_USE_CUDA', 'true')  
-#dataRoot = "/data/home/viscent/Light"
-dataRoot = sys.path[0]
+dataRoot = "/data/home/viscent/Light"
+# dataRoot = sys.path[0]
 
 def init_prog():
     global ratio_TD_all_r, ratio_TU_all_r, ratio_DU_all_r
