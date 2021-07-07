@@ -145,10 +145,10 @@ def filterRaw(raw,picks, ref_set_average=False, ref_channels=['M1', 'M2']):
     raw.filter(0.1, None, fir_design='firwin')
     if ref_set_average: 
         # 可以考虑使用所有通道的平均值作为参考
-        raw = raw.copy().set_eeg_reference(ref_channels='average')
+        raw = raw.copy().set_eeg_reference(ref_channels='average', projection=True)
     else:
         # 使用特定的参考电极
-        raw = raw.copy().set_eeg_reference(ref_channels=ref_channels, projection=False)
+        raw = raw.copy().set_eeg_reference(ref_channels=ref_channels, projection=True)
     raw = raw.notch_filter(freqs=50,method='spectrum_fit')
     raw.plot_psd(area_mode='range', tmax=10.0, picks=picks, average=False)
 def dbgPlot(raw):
