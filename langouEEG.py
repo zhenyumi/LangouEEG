@@ -114,6 +114,16 @@ def initData(subject_name,picks_str=['O1','O2','OZ']):
     if not os.path.exists(dataRoot+('/Light')):
         os.mkdir('Light')
     return raw,picks,picks_str
+def initData_clean(subject_name,picks_str=['O1','O2','OZ']):
+    file_path = dataRoot+'/Light/'+subject_name + " Data.cnt"
+    print(dataRoot)
+    print(file_path)
+    raw = mne.io.read_raw_cnt(file_path, preload=True)
+    # picks = mne.pick_types(raw.info, meg=False, eeg=True, stim=False, eog=True, exclude='bads')
+    picks = picks_str
+    if not os.path.exists(dataRoot+('/Light')):
+        os.mkdir('Light')
+    return raw,picks,picks_str
 def initLayout(raw):
     layout = pd.read_csv(dataRoot + '/channel_dict.txt', sep = '\t')
     layout.columns = layout.columns.str.strip()
