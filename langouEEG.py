@@ -674,4 +674,17 @@ def save_rel_powers(filefolder = dataRoot + '/Light/csvs'):
     df_F['rel_power_flicker'] = rel_power_F
     df_csv = pd.concat([df_R, df_F], axis=1)
     df_csv.to_csv(filefolder + '/rel_powers.csv')
+
+def calc_psds(epoch, fmin, fmax, n_jobs=1, type='multitaper'):
+    if type=='multitaper':
+        psds, freqs = psd_multitaper(epoch, fmin=fmin, fmax=fmax, n_jobs=n_jobs)
+        return psds, freqs
+    return 
     
+def save_psd(psd, freqs, filepath='default.csv', pad=5):
+    psd = np.mean(psd, axis=1)
+    psd = psd[:, ::pad]
+    freqs = freqs[::pad]
+    psd = np.insert(psd, 0, values=freqs, axis=0)
+    np.savetxt(filepath, psd, delimiter=',')
+    return
