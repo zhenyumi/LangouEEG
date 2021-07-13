@@ -682,7 +682,7 @@ def calc_psds(epoch, fmin, fmax, n_jobs=1, type='multitaper'):
     return 
     
 def save_psd(psd, freqs, filepath='default.csv', pad=5):
-    psd = np.mean(psd, axis=1)
+    # psd = np.mean(psd, axis=1）
     psd = psd[:, ::pad]
     freqs = freqs[::pad]
     psd = np.insert(psd, 0, values=freqs, axis=0)
