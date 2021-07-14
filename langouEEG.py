@@ -110,7 +110,7 @@ def initData(subject_name,picks_str=['O1','O2','OZ']):
     raw = mne.io.read_raw_cnt(file_path, preload=True)
     # picks = mne.pick_types(raw.info, meg=False, eeg=True, stim=False, eog=True, exclude='bads')
     picks = mne.pick_channels(raw.info["ch_names"], picks_str)  
-    raw.set_channel_types({'Trigger':'stim','VEO':'eog'})
+    raw = raw.set_channel_types({'Trigger':'stim','VEO':'eog'})
     if not os.path.exists(dataRoot+('/Light')):
         os.mkdir('Light')
     return raw,picks,picks_str
@@ -125,17 +125,19 @@ def initData_clean(subject_name,picks_str=['O1','O2','OZ']):
         os.mkdir('Light')
     return raw,picks,picks_str
 def initLayout(raw):
-    layout = pd.read_csv(dataRoot + '/channel_dict.txt', sep = '\t')
-    layout.columns = layout.columns.str.strip()
-    layout["labels"] = layout["labels"].str.strip()
-    layout = layout.set_index('labels')
-    layout = layout.to_dict(orient = "index")
-    for channel in layout.keys():
-        yxz = np.array([layout[channel]["Y"], layout[channel]["X"], layout[channel]["Z"]])
-        layout[channel] = yxz
-    layout = mne.channels.make_dig_montage(layout, coord_frame='head')
-    mne.viz.plot_montage(layout)
-    raw.set_montage(layout)
+    # layout = pd.read_csv(dataRoot + '/channel_dict.txt', sep = '\t')
+    # layout.columns = layout.columns.str.strip()
+    # layout["labels"] = layout["labels"].str.strip()
+    # layout = layout.set_index('labels')
+    # layout = layout.to_dict(orient = "index")
+    # for channel in layout.keys():
+    #     yxz = np.array([layout[channel]["Y"], layout[channel]["X"], layout[channel]["Z"]])
+    #     layout[channel] = yxz
+    # layout = mne.channels.make_dig_montage(layout, coord_frame='head')
+    # mne.viz.plot_montage(layout)
+    # raw.set_montage(layout)
+    quikMontage = mne.channels.read_custom_montage(os.path.join(dataRoot,'LangouEEG','quikCap.elc'))
+    raw = raw.copy().set_montage(quikMontage)
     return raw
 def extractEvents(raw):
 # cnt file describe
@@ -153,15 +155,17 @@ def extractEvents(raw):
     print(event_dict)
     return events, event_dict
 def filterRaw(raw,picks, ref_set_average=False, ref_channels=['M1', 'M2']):
-    raw.filter(0.1, None, fir_design='firwin')
+    raw = raw.filter(0.1, None, fir_design='firwin')
     if ref_set_average: 
         # 可以考虑使用所有通道的平均值作为参考
         raw = raw.copy().set_eeg_reference(ref_channels='average', projection=True)
     else:
         # 使用特定的参考电极
         raw = raw.copy().set_eeg_reference(ref_channels=ref_channels, projection=True)
+    raw = raw.apply_proj()
     raw = raw.notch_filter(freqs=50,method='spectrum_fit')
-    raw.plot_psd(area_mode='range', tmax=10.0, picks=picks, average=False)
+    # raw.plot_psd(area_mode='range', tmax=10.0, picks=picks, average=False)
+    return raw
 def dbgPlot(raw):
     # Plot raw data
     img_raw_psd = raw.plot_psd()
@@ -180,6 +184,7 @@ def runICA(raw):
     # ica.plot_components()
     bad_ica = ica.detect_artifacts(raw).exclude
     raw = ica.apply(raw.copy(), exclude=bad_ica)
+    return raw
 def extractEpochs(raw,events,picks,tmin_rest = 60,tmax_rest = 120,tmin_flick = 3,tmax_flick = 30):
 # Get epoch for each event
     tmin_rest = tmin_rest

@@ -26,9 +26,10 @@ else:
     subject_name='S'+str(subject_name)
 print(subject_name)
 raw,picks,picks_str = initData(subject_name)
-initLayout(raw)
+raw = initLayout(raw)
 events, event_dict=extractEvents(raw)
-filterRaw(raw, picks, ref_set_average=True, ref_channels=['M1', 'M2'])
-runICA(raw)
+raw = filterRaw(raw, picks, ref_set_average=True, ref_channels=['M1', 'M2'])
+raw = runICA(raw)
 with open(dataRoot+'/clean_data_av/'+subject_name+'_clean.lgeeg','wb') as f:
     pickle.dump(raw,f)
+print(subject_name+' done')
