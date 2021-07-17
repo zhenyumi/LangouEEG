@@ -185,7 +185,7 @@ def runICA(raw):
     bad_ica = ica.detect_artifacts(raw).exclude
     raw = ica.apply(raw.copy(), exclude=bad_ica)
     return raw
-def extractEpochs(raw,events,picks,tmin_rest = 60,tmax_rest = 120,tmin_flick = 3,tmax_flick = 30):
+def extractEpochs(raw,events,picks,tmin_rest = -20,tmax_rest = -10,tmin_flick = 3,tmax_flick = 30):
 # Get epoch for each event
     tmin_rest = tmin_rest
     tmax_rest = tmax_rest
@@ -201,7 +201,7 @@ def extractEpochs(raw,events,picks,tmin_rest = 60,tmax_rest = 120,tmin_flick = 3
     evoked_RF = epoch_RF.average()
     #evoked_RF.plot(time_unit='s')
     ## Epoch: Random rest
-    event_id = 2
+    event_id = 1
     tmin = tmin_rest
     tmax = tmax_rest
     epoch_RR = mne.Epochs(raw, events, event_id, tmin, tmax, proj=True,
@@ -209,7 +209,7 @@ def extractEpochs(raw,events,picks,tmin_rest = 60,tmax_rest = 120,tmin_flick = 3
     evoked_RR = epoch_RR.average()
     #evoked_RR.plot(time_unit='s')
     ## Epoch: 40 Hz rest
-    event_id = 3
+    event_id = 4
     tmin = tmin_rest
     tmax = tmax_rest
     epoch_4R = mne.Epochs(raw, events, event_id, tmin, tmax, proj=True,
