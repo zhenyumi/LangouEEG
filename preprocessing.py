@@ -19,7 +19,7 @@ from mpi4py import MPI
 comm = MPI.COMM_WORLD
 size = comm.Get_size()
 rank = comm.Get_rank()
-subject_name=int(rank)+1
+subject_name=int(rank)+21
 if subject_name<10:
     subject_name='S0'+str(subject_name)
 else:
