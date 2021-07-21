@@ -141,15 +141,15 @@ def initLayout(raw):
     return raw
 def extractEvents(raw):
 # cnt file describe
-    print("file info:")
-    print(raw.info)
-    print("channel names:")
-    print(raw.info["ch_names"])
-    print("time period:")
-    print(raw.n_times)
-    #print("time points:")
-    #print(raw.times)
-    print("events:")
+    # print("file info:")
+    # print(raw.info)
+    # print("channel names:")
+    # print(raw.info["ch_names"])
+    # print("time period:")
+    # print(raw.n_times)
+    # #print("time points:")
+    # #print(raw.times)
+    # print("events:")
     events, event_dict = mne.events_from_annotations(raw)
     # event_dict = {'random_flicker-60s':1, 'random_rest-300s':2, '40Hz_rest-300s':3, '40Hz_flicker-60s':4}
     print(event_dict)
