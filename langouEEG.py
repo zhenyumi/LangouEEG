@@ -28,8 +28,8 @@ def init_prog():
     global ratioMA_TD_all_f, ratioMA_TU_all_f, ratioMA_DU_all_f
     ratioMA_TD_all_f, ratioMA_TU_all_f, ratioMA_DU_all_f = [],[],[]
     
-    global rel_power_R, rel_power_F, subj_number_R, subj_number_F
-    rel_power_R, rel_power_F, subj_number_R, subj_number_F = [],[],[],[]
+    global rel_power_R, rel_power_F, subj_number_R, subj_number_F, rel_power_R_ran, rel_power_F_ran
+    rel_power_R, rel_power_F, subj_number_R, subj_number_F, rel_power_R_ran, rel_power_F_ran = [],[],[],[],[],[]
     
     return
 def save_ratios(filefolder = dataRoot + '/Light'):
@@ -695,11 +695,42 @@ def calc_abs_power_simp(epoch, fmin, fmax, fbottom, ftop, sfreq):
     print(band_power_all)
     return band_power_all
 
+def cal_abs_power_allch(epoch, fmin, fmax, fbottom, ftop, sfreq):
+    epoch = np.asarray(epoch)
+    band_power_all = []
+    # psds, freqs = mne.time_frequency.psd_array_multitaper(epoch, n_jobs=8, sfreq=500.0) 
+    psds, freqs = mne.time_frequency.psd_array_multitaper(epoch, fmin=fbottom, fmax=ftop, n_jobs=8, sfreq=500.0)
+    # Average all channels
+    psds = np.mean(psds, axis=0)
+    # Resolution of calculation
+    freq_res = freqs[1] - freqs[0]
+    # Select frequency band
+    band = [fmin, fmax]
+    idx_band = ((freqs >= band[0]) & (freqs <= band[1]))
+    print(freqs.shape)
+    print(psds.shape)
+    # integrate the PSD
+    num = (fmax-fmin)/freq_res
+    for i in range(psds.shape[0]):
+        band_power = simps(psds[i][idx_band], dx=freq_res)
+        band_power_all.append(band_power)
+        # band_power_all.append(band_power/(num))
+    print(band)
+    print(band_power_all)
+    return band_power_all
+
 def get_all_abs_power(epoch_R, epoch_F, f_bottom = 35.0, f_low = 39.0, f_high = 41.0, f_top = 50.0, sfreq=500.0):
     power_all_R = calc_abs_power_simp(epoch=epoch_R, fmin=f_bottom, fmax=f_top, fbottom=f_bottom, ftop=f_top, sfreq=500.0)
     power_R = calc_abs_power_simp(epoch=epoch_R, fmin=f_low, fmax=f_high, fbottom=f_bottom, ftop=f_top, sfreq=500.0)
     power_all_F = calc_abs_power_simp(epoch=epoch_F, fmin=f_bottom, fmax=f_top, fbottom=f_bottom, ftop=f_top, sfreq=500.0)
     power_F = calc_abs_power_simp(epoch=epoch_F, fmin=f_low, fmax=f_high, fbottom=f_bottom, ftop=f_top, sfreq=500.0)
+    return power_all_R, power_R, power_all_F, power_F
+
+def get_allch_abs_power(epoch_R, epoch_F, f_bottom = 35.0, f_low = 39.0, f_high = 41.0, f_top = 50.0, sfreq=500.0):
+    power_all_R = cal_abs_power_allch(epoch=epoch_R, fmin=f_bottom, fmax=f_top, fbottom=f_bottom, ftop=f_top, sfreq=500.0)
+    power_R = cal_abs_power_allch(epoch=epoch_R, fmin=f_low, fmax=f_high, fbottom=f_bottom, ftop=f_top, sfreq=500.0)
+    power_all_F = cal_abs_power_allch(epoch=epoch_F, fmin=f_bottom, fmax=f_top, fbottom=f_bottom, ftop=f_top, sfreq=500.0)
+    power_F = cal_abs_power_allch(epoch=epoch_F, fmin=f_low, fmax=f_high, fbottom=f_bottom, ftop=f_top, sfreq=500.0)
     return power_all_R, power_R, power_all_F, power_F
 
 def cal_rel_power_R(power_target, power_all):
@@ -715,6 +746,20 @@ def cal_rel_power_F(power_target, power_all):
         rel_power_F.append(power_target[i]/power_all[i])
     print(rel_power_F)
     return rel_power_F, min(len(power_target), len(power_all))
+
+def cal_rel_power_R_ran(power_target, power_all):
+    global rel_power_R_ran
+    for i in range(min(len(power_target), len(power_all))):
+        rel_power_R_ran.append(power_target[i]/power_all[i])
+    print(rel_power_R_ran)
+    return rel_power_R_ran, min(len(power_target), len(power_all))
+
+def cal_rel_power_F_ran(power_target, power_all):
+    global rel_power_F_ran
+    for i in range(min(len(power_target), len(power_all))):
+        rel_power_F_ran.append(power_target[i]/power_all[i])
+    print(rel_power_F_ran)
+    return rel_power_F_ran, min(len(power_target), len(power_all))
 
 def save_rel_powers_subj(length_R, length_F, filefolder = dataRoot + '/Light/csvs', subject_name="Undefined"):
     # 添加样本序号索引
