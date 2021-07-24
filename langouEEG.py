@@ -223,7 +223,7 @@ def extractEpochsBlind(raw,events,picks,tmin_rest = -20,tmax_rest = -10,tmin_fli
     #epoch_4R.drop([0,1])
     evoked_4R = epoch_4R.average()
     #evoked_4R.plot(time_unit='s')
-    ## Epoch: 40 Hz rest
+    ## Epoch: 40 Hz flicker
     event_id = custom_event_ids['LB']
     event_id = event_dict[str(event_id)]
     tmin = tmin_flick
@@ -272,7 +272,56 @@ def extractEpochs(raw,events,picks,tmin_rest = -20,tmax_rest = -10,tmin_flick = 
     #epoch_4R.drop([0,1])
     evoked_4R = epoch_4R.average()
     #evoked_4R.plot(time_unit='s')
+    ## Epoch: 40 Hz flicker
+    event_id = event_dict[str(custom_event_ids['4F'])]
+    tmin = tmin_flick
+    tmax = tmax_flick
+    epoch_4F = mne.Epochs(raw, events, event_id, tmin, tmax, proj=True,
+                        picks=picks,reject=reject,baseline=(tmin_flick, tmin_flick), preload=True)
+    epoch_4F_all = mne.Epochs(raw, events, event_id, tmin, tmax, proj=True,
+                        baseline=(tmin_flick, tmin_flick), preload=True, 
+                        reject=dict())
+    #epoch_4F.drop([0,1])
+    #epoch_4F_all.drop([0,1])
+    evoked_4F = epoch_4F.average()
+    #evoked_4F.plot(time_unit='s')
+    return epoch_RR,epoch_RF,epoch_4R,epoch_4F
+
+def extractEpochs_id(raw,events,picks,tmin_rest = 60,tmax_rest = 120,tmin_flick = 10,tmax_flick = 20):
+# Get epoch for each event
+    custom_event_ids = {'LB':5, 'RB':7,'4F':9,'RF':12,'4R':8,'RR':11}
+    tmin_rest = tmin_rest
+    tmax_rest = tmax_rest
+    tmin_flick = tmin_flick
+    tmax_flick = tmax_flick
+    reject=dict()
+    ## Epoch: Random flicker
+    events, event_dict = mne.events_from_annotations(raw)
+    event_id = event_dict[str(custom_event_ids['RF'])]
+    tmin = tmin_flick
+    tmax = tmax_flick
+    epoch_RF = mne.Epochs(raw, events, event_id, tmin, tmax, proj=True,
+                        picks=picks,reject=reject, baseline=(tmin_flick, tmin_flick), preload=True)
+    evoked_RF = epoch_RF.average()
+    #evoked_RF.plot(time_unit='s')
+    ## Epoch: Random rest
+    event_id = event_dict[str(custom_event_ids['RR'])]
+    tmin = tmin_rest
+    tmax = tmax_rest
+    epoch_RR = mne.Epochs(raw, events, event_id, tmin_rest, tmax_rest, proj=True,
+                        picks=picks,reject=reject, baseline=None, preload=True)
+    evoked_RR = epoch_RR.average()
+    #evoked_RR.plot(time_unit='s')
     ## Epoch: 40 Hz rest
+    event_id = event_dict[str(custom_event_ids['4R'])]
+    tmin = tmin_rest
+    tmax = tmax_rest
+    epoch_4R = mne.Epochs(raw, events, event_id, tmin_rest, tmax_rest, proj=True,
+                        picks=picks,reject=reject, baseline=None, preload=True)
+    #epoch_4R.drop([0,1])
+    evoked_4R = epoch_4R.average()
+    #evoked_4R.plot(time_unit='s')
+    ## Epoch: 40 Hz flicker
     event_id = event_dict[str(custom_event_ids['4F'])]
     tmin = tmin_flick
     tmax = tmax_flick
