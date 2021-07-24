@@ -24,6 +24,17 @@ def plot_substate(epoch, maps, n_maps, dpi=300, save=False, filename='Default', 
         fig.savefig(result_dir + '/' + filename + fmt)
     return fig
 
+def save_sub_stateplots(epoch, maps, n_maps, dpi=300, save=False, filename='Default', fmt='.png', result_dir=''):
+    result_dir = result_dir + '/' + fmt
+    if not os.path.exists(result_dir):  #判断是否存在文件夹如果不存在则创建为文件夹
+        os.makedirs(result_dir)
+    for i in range(0,n_maps):
+        fig = plt.figure(dpi = dpi)
+        plot_topomap(maps[i], epoch.info, show=False)
+        fig.savefig(result_dir + '/' + filename + "_{0}".format(i) + fmt)
+        fig.clf()
+    return
+
 def display_gfp_peaks(gfp_peaks, x, fs):
     pps = len(gfp_peaks) / (len(x)/fs)  # peaks per second
     print(f"\nGFP peaks per sec.: {pps:.2f}")
@@ -100,11 +111,15 @@ def display_maps(epoch, tm, n_maps=4, save=False, dpi=300, filename='Default', f
     display_info(x, n_maps, gfp_peaks, gev, fs)
     display_states(x, pca1)
     fig = plot_substate(epoch=epoch, maps=maps, n_maps=n_maps, 
-    save=save, dpi=dpi, filename=filename, fmt=fmt, result_dir=result_dir)
+                        save=save, dpi=dpi, filename=filename, fmt=fmt, result_dir=result_dir)
     # Save cache
     
     if to_save_cache:
         folder_path = result_dir + '/cache/' + tm
         save_cache(time_augs = time_augs, folder_path=folder_path, x=x, 
         maps=maps, pca=pca1, gfp_peaks=gfp_peaks, gev=gev, state=filename, fig=fig)
+        save_sub_stateplots(epoch=epoch, maps=maps, n_maps=n_maps, 
+                            save=save, dpi=dpi, filename=filename, fmt='.png', result_dir=folder_path)
+        save_sub_stateplots(epoch=epoch, maps=maps, n_maps=n_maps, 
+                            save=save, dpi=dpi, filename=filename, fmt='.svg', result_dir=folder_path)
     return
