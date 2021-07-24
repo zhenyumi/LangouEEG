@@ -225,17 +225,3 @@ def SCE(X):
   ce[i]=entropy(c)
 
  return mean(ce)/norm,ce/norm
-
-
-
-
-
-
-
-
-
-
-
-
-
-
