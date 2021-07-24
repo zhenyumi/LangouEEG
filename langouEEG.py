@@ -732,16 +732,16 @@ def calc_abs_power_simp(epoch, fmin, fmax, fbottom, ftop, sfreq):
     # Select frequency band
     band = [fmin, fmax]
     idx_band = ((freqs >= band[0]) & (freqs <= band[1]))
-    print(freqs.shape)
-    print(psds.shape)
+    # print(freqs.shape)
+    # print(psds.shape)
     # integrate the PSD
     num = (fmax-fmin)/freq_res
     for i in range(psds.shape[0]):
         band_power = simps(psds[i][idx_band], dx=freq_res)
         band_power_all.append(band_power)
         # band_power_all.append(band_power/(num))
-    print(band)
-    print(band_power_all)
+    # print(band)
+    # print(band_power_all)
     return band_power_all
 
 def cal_abs_power_allch(epoch, fmin, fmax, fbottom, ftop, sfreq):
@@ -756,16 +756,16 @@ def cal_abs_power_allch(epoch, fmin, fmax, fbottom, ftop, sfreq):
     # Select frequency band
     band = [fmin, fmax]
     idx_band = ((freqs >= band[0]) & (freqs <= band[1]))
-    print(freqs.shape)
-    print(psds.shape)
+    # print(freqs.shape)
+    # print(psds.shape)
     # integrate the PSD
     num = (fmax-fmin)/freq_res
     for i in range(psds.shape[0]):
         band_power = simps(psds[i][idx_band], dx=freq_res)
         band_power_all.append(band_power)
         # band_power_all.append(band_power/(num))
-    print(band)
-    print(band_power_all)
+    # print(band)
+    # print(band_power_all)
     return band_power_all
 
 def get_all_abs_power(epoch_R, epoch_F, f_bottom = 35.0, f_low = 39.0, f_high = 41.0, f_top = 50.0, sfreq=500.0):
@@ -786,29 +786,35 @@ def cal_rel_power_R(power_target, power_all):
     global rel_power_R
     for i in range(min(len(power_target), len(power_all))):
         rel_power_R.append(power_target[i]/power_all[i])
-    print(rel_power_R)
+    # print(rel_power_R)
     return rel_power_R, min(len(power_target), len(power_all))
 
 def cal_rel_power_F(power_target, power_all):
     global rel_power_F
     for i in range(min(len(power_target), len(power_all))):
         rel_power_F.append(power_target[i]/power_all[i])
-    print(rel_power_F)
+    # print(rel_power_F)
     return rel_power_F, min(len(power_target), len(power_all))
 
 def cal_rel_power_R_ran(power_target, power_all):
     global rel_power_R_ran
     for i in range(min(len(power_target), len(power_all))):
         rel_power_R_ran.append(power_target[i]/power_all[i])
-    print(rel_power_R_ran)
+    # print(rel_power_R_ran)
     return rel_power_R_ran, min(len(power_target), len(power_all))
 
 def cal_rel_power_F_ran(power_target, power_all):
     global rel_power_F_ran
     for i in range(min(len(power_target), len(power_all))):
         rel_power_F_ran.append(power_target[i]/power_all[i])
-    print(rel_power_F_ran)
+    # print(rel_power_F_ran)
     return rel_power_F_ran, min(len(power_target), len(power_all))
+
+def cal_rel_power(power_target, power_all):
+    rel_powers = []
+    for i in range(min(len(power_target), len(power_all))):
+        rel_powers.append(power_target[i]/power_all[i])
+    return rel_powers
 
 def save_rel_powers_subj(length_R, length_F, filefolder = dataRoot + '/Light/csvs', subject_name="Undefined"):
     # 添加样本序号索引
