@@ -84,7 +84,7 @@ def save_cache(folder_path, x, maps, pca, gfp_peaks, gev, state, fig, time_augs,
         os.makedirs(folder_path)
     save_to_file(time_augs,  folder_path + '/4R4R4F4FRFRF_time.csv')
     save_to_file(x, folder_path + '/x_{0}.csv'.format(state))
-    save_to_file(maps, folder_path + '/maps_{0}.csv'.format(state))
+    # save_to_file(maps, folder_path + '/maps_{0}.csv'.format(state))
     save_to_file(pca, folder_path + '/pca_{0}.csv'.format(state))
     save_to_file(gfp_peaks, folder_path + '/gfp_peaks_{0}.csv'.format(state))
     save_to_file(gev, folder_path + '/gev_{0}.csv'.format(state))
@@ -122,4 +122,8 @@ def display_maps(epoch, tm, n_maps=4, save=False, dpi=300, filename='Default', f
                             save=save, dpi=dpi, filename=filename, fmt='.png', result_dir=folder_path)
         save_sub_stateplots(epoch=epoch, maps=maps, n_maps=n_maps, 
                             save=save, dpi=dpi, filename=filename, fmt='.svg', result_dir=folder_path)
+        save_maps = pd.DataFrame()
+        for i in range(0, n_maps):
+            save_maps[str(i)] = maps[i]
+        save_maps.to_csv(folder_path + '/maps_{0}.csv'.format(filename))
     return
