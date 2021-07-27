@@ -250,7 +250,7 @@ def extractEpochsBlind(raw,events,picks,tmin_rest = -20,tmax_rest = -10,tmin_fli
     evoked_4F = epoch_4F.average()
     #evoked_4F.plot(time_unit='s')
     return epoch_RR,epoch_RF,epoch_4R,epoch_4F
-def extractEpochs(raw,events,picks,tmin_rest = -20,tmax_rest = -10,tmin_flick = 10,tmax_flick = 20):
+def extractEpochs(raw,events,picks,tmin_rest = -30,tmax_rest = -20,tmin_flick = 10,tmax_flick = 20):
 # Get epoch for each event
     custom_event_ids = {'LB':5, 'RB':7,'4F':9,'RF':12,'4R':8,'RR':11}
     tmin_rest = tmin_rest
