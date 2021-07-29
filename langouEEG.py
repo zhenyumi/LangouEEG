@@ -21,6 +21,8 @@ from mne.datasets import sample
 from mne.datasets import fetch_fsaverage
 from mne.viz import plot_topomap
 from mpl_toolkits.mplot3d import Axes3D  # noqa
+import logging
+from lempel_ziv_complexity import lempel_ziv_complexity
 
 
 #mne.utils.set_config('MNE_USE_CUDA', 'true')  
@@ -898,7 +900,7 @@ def display_gev(gev):
     print(f"\ntotal GEV: {gev.sum():.3f}")
     return
 
-def display_info(x, n_maps, gfp_peaks, gev, fs):
+def display_info(x, n_maps, gfp_peaks, gev, fs, savelog=False, result_dir='', state='Default', tm=''):
     p_hat = p_empirical(x, n_maps)
     T_hat = T_empirical(x, n_maps)
     print("\nEmpirical symbol distribution (RTT):\n")
@@ -917,6 +919,23 @@ def display_info(x, n_maps, gfp_peaks, gev, fs):
     h_mc = mc_entropy_rate(p_hat, T_hat)
     print(f"\nEmpirical entropy rate h = {h_rate:.2f}")
     print(f"Theoretical MC entropy rate h = {h_mc:.2f}")
+
+    if savelog:
+        logger = logging.getLogger(__name__)
+        logging.basicConfig(level=logging.DEBUG,
+                    filename=result_dir + '/result_k{0}.log'.format(n_maps),
+                    filemode='a',
+                    # format='%(asctime)s - %(filename)s[line:%(lineno)d] - %(levelname)s: %(message)s'
+                    format = ''
+                    )
+        logger.info('\n\n' + tm)
+        logger.info('\nCondition: {0}'.format(state))
+        logger.info(f"\ntotal GEV: {gev.sum():.6f}")
+        logger.info('\nEmpirical symbol distribution (RTT):\n')
+        for i in range(n_maps):
+            logger.info(f"p_{i:d} = {p_hat[i]:.6f}")
+        logger.info("\nEmpirical transition matrix:")
+        logger.info(np.array2string(T_hat, separator=', '))
     return
 
 def display_states(x, pca1):
@@ -943,7 +962,27 @@ def save_cache(folder_path, x, maps, pca, gfp_peaks, gev, state, fig, time_augs,
     fig.savefig(folder_path + '/' + state + fmt)
     return
 
-def display_maps(epoch, tm, n_maps=4, save=False, dpi=300, filename='Default', fmt='.png', to_save_cache=False, time_augs=[0,0,0,0], result_dir=''):
+'''
+LZc
+'''
+def LZC(x, epochs):
+    strx = ''
+    for a in x:
+        strx += str(a)
+    epochs_count = len(list(epochs.values()))
+    epoch_len = int(x.shape[0]/epochs_count)
+    lzc = []
+    for i in range(0,x.shape[0],epoch_len):
+        lzc.append(lempel_ziv_complexity(strx[i:i+epoch_len]))
+    return lzc
+
+def display_lzc(lzc):
+    print("The lzc:")
+    print(np.shape(lzc))
+    print(lzc)
+    return
+
+def display_maps(epoch, tm, n_maps=4, save=False, dpi=300, filename='Default', fmt='.png', to_save_cache=False, time_augs=[0,0,0,0], result_dir='', calc_lzc=False, epochs=None, save_log=False):
     data_raw = np.hstack(epoch.get_data()).T
     fs = 500
     data = bp_filter(data_raw, f_lo=2, f_hi=20, fs=fs)
@@ -960,12 +999,14 @@ def display_maps(epoch, tm, n_maps=4, save=False, dpi=300, filename='Default', f
     chs = 64
     locs = []
     maps, x, gfp_peaks, gev = clustering(data, fs, chs, locs, mode, n_maps, interpol=False, doplot=False)
-    display_info(x, n_maps, gfp_peaks, gev, fs)
+    display_info(x, n_maps, gfp_peaks, gev, fs, savelog=save_log, result_dir=result_dir, state=filename, tm=tm)
     display_states(x, pca1)
+    if calc_lzc:
+        lzc = LZC(x, epochs)
+        display_lzc(lzc)
     fig = plot_substate(epoch=epoch, maps=maps, n_maps=n_maps, 
                         save=save, dpi=dpi, filename=filename, fmt=fmt, result_dir=result_dir)
     # Save cache
-    
     if to_save_cache:
         folder_path = result_dir + '/cache/' + tm
         save_cache(time_augs = time_augs, folder_path=folder_path, x=x, 
@@ -978,6 +1019,45 @@ def display_maps(epoch, tm, n_maps=4, save=False, dpi=300, filename='Default', f
         for i in range(0, n_maps):
             save_maps[str(i)] = maps[i]
         save_maps.to_csv(folder_path + '/maps_{0}.csv'.format(filename))
+
+    return maps, x, gfp_peaks, gev, data,pca1
+
+def save_logs(epoch, tm, n_maps=4, result_dir='', filename='Default', save_time=True, save_p=True, save_t=True, save_state=True, save_GEV=True, save_RTT=True):
+    data_raw = np.hstack(epoch.get_data()).T
+    fs = 500
+    data = bp_filter(data_raw, f_lo=2, f_hi=20, fs=fs)
+    pca = PCA(copy=True, n_components=1, whiten=False)
+    pca1 = pca.fit_transform(data)[:,0]
+    mode = ["aahc", "kmeans", "kmedoids", "pca", "ica"][1]
+    print(f"Clustering algorithm: {mode:s}")
+    n_maps = n_maps
+    chs = 64
+    locs = []
+    maps, x, gfp_peaks, gev = clustering(data, fs, chs, locs, mode, n_maps, interpol=False, doplot=False)
+    state = filename
+    p_hat = p_empirical(x, n_maps)
+    T_hat = T_empirical(x, n_maps)
+
+    logger = logging.getLogger(__name__)
+    logging.basicConfig(level=logging.DEBUG,
+                filename=result_dir + '/result_k{0}.log'.format(n_maps),
+                filemode='a',
+                # format='%(asctime)s - %(filename)s[line:%(lineno)d] - %(levelname)s: %(message)s'
+                format = ''
+                )
+    if save_time:
+        logger.info('\n\n' + tm)
+    if save_state:
+        logger.info('\nCondition: {0}'.format(state))
+    if save_GEV:
+        logger.info(f"\ntotal GEV: {gev.sum():.8f}")
+    if save_RTT:
+        logger.info('\nEmpirical symbol distribution (RTT):\n')
+        for i in range(n_maps):
+            logger.info(f"p_{i:d} = {p_hat[i]:.6f}")
+    if save_t:
+        logger.info("\nEmpirical transition matrix:")
+        logger.info(np.array2string(T_hat, separator=', '))
     return
 
 '''
