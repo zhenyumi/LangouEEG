@@ -266,7 +266,7 @@ def extractEpochs(raw,events,picks,tmin_rest = -30,tmax_rest = -20,tmin_flick = 
     tmin = tmin_flick
     tmax = tmax_flick
     epoch_RF = mne.Epochs(raw, events, event_id, tmin, tmax, proj=True,
-                        picks=picks,reject=reject, baseline=(tmin_flick, tmin_flick), preload=True)
+                        picks=picks,reject=reject, baseline=(tmin, tmax), preload=True)
     evoked_RF = epoch_RF.average()
     #evoked_RF.plot(time_unit='s')
     ## Epoch: Random rest
@@ -933,7 +933,7 @@ def display_info(x, n_maps, gfp_peaks, gev, fs, savelog=False, result_dir='', st
         logger.info(f"\ntotal GEV: {gev.sum():.6f}")
         logger.info('\nEmpirical symbol distribution (RTT):\n')
         for i in range(n_maps):
-            logger.info(f"p_{i:d} = {p_hat[i]:.6f}")
+            logger.info(f"p_{i:d} = {p_hat[i]:.8f}")
         logger.info("\nEmpirical transition matrix:")
         logger.info(np.array2string(T_hat, separator=', '))
     return

@@ -170,6 +170,46 @@ def display_maps(epoch, tm, n_maps=4, save=False, dpi=300, filename='Default', f
 
     return maps, x, gfp_peaks, gev, data,pca1
 
+def display_maps_simple(epoch, tm, n_maps=4, save=False, dpi=300, filename='Default', fmt='.png', to_save_cache=False, time_augs=[0,0,0,0], result_dir='', calc_lzc=False, epochs=None, save_log=False):
+    data_raw = np.hstack(epoch.get_data()).T
+    fs = 500
+    data = bp_filter(data_raw, f_lo=2, f_hi=20, fs=fs)
+    print(data.shape)
+    pca = PCA(copy=True, n_components=1, whiten=False)
+    pca1 = pca.fit_transform(data)[:,0]
+
+    # plot_data(pca1, fs)
+    # t0, t1 = 1000, 3000
+    # plot_data(pca1[t0:t1], fs)
+    mode = ["aahc", "kmeans", "kmedoids", "pca", "ica"][1]
+    print(f"Clustering algorithm: {mode:s}")
+    n_maps = n_maps
+    chs = 64
+    locs = []
+    maps, x, gfp_peaks, gev = clustering(data, fs, chs, locs, mode, n_maps, interpol=False, doplot=False)
+    # display_info(x, n_maps, gfp_peaks, gev, fs, savelog=save_log, result_dir=result_dir, state=filename, tm=tm)
+    # display_states(x, pca1)
+    # if calc_lzc:
+    #     lzc = LZC(x, epochs)
+    #     display_lzc(lzc)
+    fig = plot_substate(epoch=epoch, maps=maps, n_maps=n_maps, 
+                        save=save, dpi=dpi, filename=filename, fmt=fmt, result_dir=result_dir)
+    # Save cache
+    if False:
+        folder_path = result_dir + '/cache/' + tm
+        save_cache(time_augs = time_augs, folder_path=folder_path, x=x, 
+        maps=maps, pca=pca1, gfp_peaks=gfp_peaks, gev=gev, state=filename, fig=fig)
+        save_sub_stateplots(epoch=epoch, maps=maps, n_maps=n_maps, 
+                            save=save, dpi=dpi, filename=filename, fmt='.png', result_dir=folder_path)
+        save_sub_stateplots(epoch=epoch, maps=maps, n_maps=n_maps, 
+                            save=save, dpi=dpi, filename=filename, fmt='.svg', result_dir=folder_path)
+        save_maps = pd.DataFrame()
+        for i in range(0, n_maps):
+            save_maps[str(i)] = maps[i]
+        save_maps.to_csv(folder_path + '/maps_{0}.csv'.format(filename))
+
+    return maps, x, gfp_peaks, gev, data,pca1
+
 def save_logs(epoch, tm, n_maps=4, result_dir='', filename='Default', save_time=True, save_p=True, save_t=True, save_state=True, save_GEV=True, save_RTT=True):
     data_raw = np.hstack(epoch.get_data()).T
     fs = 500
