@@ -920,7 +920,8 @@ For microstate analysis
 def plot_substate(epoch, maps, n_maps, dpi=300, save=False, filename='Default', fmt='.png', result_dir=''):
     fig, axis = plt.subplots(1, n_maps, dpi=dpi)
     for i in range(0,n_maps):
-        axis[i].set_title('state{0}'.format(i+1))
+        axis[i].set_title('state{0}'.format(i))
+        # axis[i].set_title('state{0}'.format(i+1))
         plot_topomap(maps[i], epoch.info, axes=axis[i], show=False)
     fig.show()
     if save:
@@ -1032,7 +1033,7 @@ def display_lzc(lzc):
     return
 
 def display_maps(epoch, tm, n_maps=4, save=False, dpi=300, filename='Default', fmt='.png', to_save_cache=False, time_augs=[0,0,0,0], result_dir='', calc_lzc=False, epochs=None, save_log=False,
-f_lo=2, f_hi=20):
+f_lo=2, f_hi=20, mode=1):
     data_raw = np.hstack(epoch.get_data()).T
     fs = 500
     data = bp_filter(data_raw, f_lo=f_lo, f_hi=f_hi, fs=fs)
@@ -1043,7 +1044,7 @@ f_lo=2, f_hi=20):
     plot_data(pca1, fs)
     t0, t1 = 1000, 3000
     plot_data(pca1[t0:t1], fs)
-    mode = ["aahc", "kmeans", "kmedoids", "pca", "ica"][1]
+    mode = ["aahc", "kmeans", "kmedoids", "pca", "ica"][mode]
     print(f"Clustering algorithm: {mode:s}")
     n_maps = n_maps
     chs = 64
