@@ -1111,6 +1111,7 @@ def save_logs(epoch, tm, n_maps=4, result_dir='', filename='Default', save_time=
         logger.info(np.array2string(T_hat, separator=', '))
     return
 
+
 '''
 End microstate analysis
 '''
