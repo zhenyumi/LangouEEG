@@ -1015,15 +1015,22 @@ def save_cache(folder_path, x, maps, pca, gfp_peaks, gev, state, fig, time_augs,
 '''
 LZc
 '''
-def LZC(x, epochs):
+def LZC(x):
     strx = ''
     for a in x:
         strx += str(a)
-    epochs_count = len(list(epochs.values()))
-    epoch_len = int(x.shape[0]/epochs_count)
-    lzc = []
-    for i in range(0,x.shape[0],epoch_len):
-        lzc.append(lempel_ziv_complexity(strx[i:i+epoch_len]))
+    lzc = lempel_ziv_complexity(strx)
+    return lzc
+
+def nLZC(x):
+    strx = ''
+    prev = x[0]
+    strx += str(prev)
+    for a in x[1:]:
+        if a != prev:
+            strx += str(a)
+            prev = a
+    lzc = lempel_ziv_complexity(strx)
     return lzc
 
 def display_lzc(lzc):
